@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .db.database import database
-from .api.v1 import auth, users
+from .api.v1 import auth, users,expenses
+
 import logging
 
 settings = get_settings()
@@ -32,6 +33,7 @@ logging.basicConfig(
 # Routes
 app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["auth"])
 app.include_router(users.router, prefix=settings.API_V1_STR, tags=["users"])
+app.include_router(expenses.router, prefix=settings.API_V1_STR, tags=["expenses"])
 
 @app.on_event("startup")
 async def startup():
