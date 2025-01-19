@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FastAPI",
+      "type": "python",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--reload"],
+      "jinja": true,
+      "justMyCode": true,
+      "env": {
+        "DATABASE_URL": "postgresql://postgres:tapan@123@localhost:5432/auth_db",
+        "SECRET_KEY": "your-secret-key-here",
+        "ALGORITHM": "HS256",
+        "ACCESS_TOKEN_EXPIRE_MINUTES": "30"
+      }
+    }
+  ]
+}
