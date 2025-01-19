@@ -31,6 +31,8 @@ class Group(GroupBase):
     id: int
     created_by: int
     created_at: datetime
+    member_count: int
+    member_ids: List[int]
     
     class Config:
         from_attributes = True

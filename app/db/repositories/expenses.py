@@ -63,8 +63,21 @@ class ExpenseRepository:
             if member_id != user_id:  # Don't add creator twice
                 await self.add_group_member(group_record['id'], member_id)
         
-        return group_record
-
+        # Return complete group details including member count and member ids
+        result_query = """
+        SELECT 
+            g.id, 
+            g.name, 
+            g.created_by, 
+            g.created_at,
+            COUNT(gm.user_id) as member_count,
+            ARRAY_AGG(gm.user_id) as member_ids
+        FROM groups g
+        LEFT JOIN group_members gm ON g.id = gm.group_id
+        WHERE g.id = :group_id
+        GROUP BY g.id, g.name, g.created_by, g.created_at
+        """
+        return await database.fetch_one(query=result_query, values={"group_id": group_record['id']})
     async def add_member_to_group(self, group_id: int, new_user_id: int) -> dict:
         # Check if group exists
         group_query = "SELECT created_by FROM groups WHERE id = :group_id"
@@ -122,3 +135,55 @@ class ExpenseRepository:
         ORDER BY created_at DESC
         """
         return await database.fetch_all(query=query, values={"group_id": group_id})
+    
+    async def get_user_expenses_by_period(self, user_id: int, period: str, value: int) -> List[dict]:
+        query = """
+        SELECT id, amount, description, user_id, group_id, created_at
+        FROM expenses
+        WHERE user_id = :user_id 
+        AND date_trunc(:period, created_at) = date_trunc(:period, TIMESTAMP :value)
+        ORDER BY created_at DESC
+        """
+        values = {"user_id": user_id, "period": period, "value": value}
+        return await database.fetch_all(query=query, values=values)
+
+    
+    async def get_user_groups(self, user_id: int) -> List[dict]:
+        query = """
+        WITH group_members_count AS (
+            SELECT group_id, COUNT(*) as member_count
+            FROM group_members
+            GROUP BY group_id
+        )
+        SELECT 
+            g.id, 
+            g.name, 
+            g.created_by, 
+            g.created_at,
+            gmc.member_count,
+            ARRAY_AGG(gm2.user_id) as member_ids
+        FROM groups g
+        INNER JOIN group_members gm ON g.id = gm.group_id
+        INNER JOIN group_members gmc ON g.id = gmc.group_id
+        LEFT JOIN group_members gm2 ON g.id = gm2.group_id
+        WHERE gm.user_id = :user_id
+        GROUP BY g.id, g.name, g.created_by, g.created_at, gmc.member_count
+        ORDER BY g.created_at DESC
+        """
+        return await database.fetch_all(query=query, values={"user_id": user_id})
+
+    async def get_group_details(self, group_id: int) -> dict:
+        query = """
+        SELECT 
+            g.id, 
+            g.name, 
+            g.created_by, 
+            g.created_at,
+            ARRAY_AGG(gm.user_id) as member_ids,
+            COUNT(gm.user_id) as member_count
+        FROM groups g
+        LEFT JOIN group_members gm ON g.id = gm.group_id
+        WHERE g.id = :group_id
+        GROUP BY g.id, g.name, g.created_by, g.created_at
+        """
+        return await database.fetch_one(query=query, values={"group_id": group_id})
