@@ -27,3 +27,9 @@ async def register(
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
 
+@router.patch("/deactivate", response_model=User)
+async def deactivate_user(
+    current_user: User = Depends(get_current_user),
+    user_repo: UserRepository = Depends()
+):
+    return await user_repo.update_active_status(current_user.id, False)

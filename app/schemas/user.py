@@ -8,6 +8,9 @@ class UserBase(BaseModel):
     email: EmailStr
     username: constr(min_length=3, max_length=50)
     is_active: bool = True
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    country: Optional[str] = None
 
 # Properties to receive via API on creation
 class UserCreate(UserBase):

@@ -34,3 +34,12 @@ class UserRepository:
         }
         return await database.fetch_one(query=query, values=values)
 
+async def update_active_status(self, user_id: int, is_active: bool) -> dict:
+    query = """
+    UPDATE users 
+    SET is_active = :is_active
+    WHERE id = :user_id
+    RETURNING id, email, username, is_active, age, gender, country, created_at
+    """
+    values = {"user_id": user_id, "is_active": is_active}
+    return await database.fetch_one(query=query, values=values)

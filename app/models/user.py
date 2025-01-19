@@ -1,5 +1,5 @@
 # app/models/user.py
-from sqlalchemy import Column, Integer, String, DateTime, Index
+from sqlalchemy import Column, Integer, String, DateTime, Index,Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -13,7 +13,11 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
-    
+    is_active = Column(Boolean, default=True)
+    age = Column(Integer, nullable=True)
+    gender = Column(String(10), nullable=True)
+    country = Column(String(100), nullable=True)
+
     __table_args__ = (
         Index('idx_email_username', email, username),
     )
