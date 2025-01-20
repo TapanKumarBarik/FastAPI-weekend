@@ -87,3 +87,12 @@ async def get_group_details(
 ):
     """Get detailed information about a specific group including members"""
     return await expense_repo.get_group_details(group_id)
+
+@router.get("/groups/{group_id}/members", response_model=List[str])
+async def get_group_members(
+    group_id: int,
+    current_user: User = Depends(get_current_active_user),
+    expense_repo: ExpenseRepository = Depends()
+):
+    """Get all user names of a specific group"""
+    return await expense_repo.get_group_member_names(group_id)
