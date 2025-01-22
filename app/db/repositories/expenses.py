@@ -124,6 +124,15 @@ class ExpenseRepository:
                 status_code=500,
                 detail=f"Database error while creating group: {str(e)}"
             )
+     
+     
+    async def check_user_exists(self, user_id: int) -> bool:
+        """Check if a user exists in the database"""
+        query = """
+        SELECT id FROM users WHERE id = :user_id
+        """
+        result = await database.fetch_one(query=query, values={"user_id": user_id})
+        return result is not None   
             
     async def add_member_to_group(self, group_id: int, new_user_id: int) -> dict:
         # Check if group exists
