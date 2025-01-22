@@ -111,3 +111,18 @@ async def delete_expense(
             detail="Expense not found or you don't have permission to delete it"
         )
     return 
+
+@router.delete("/groups/{group_id}")  # Remove status_code=204
+async def delete_group(
+    group_id: int,
+    current_user: User = Depends(get_current_active_user),
+    expense_repo: ExpenseRepository = Depends()
+):
+    """Delete a group and all its members. Only the group creator can delete it."""
+    deleted = await expense_repo.delete_group(group_id, current_user.id)
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail="Group not found or you don't have permission to delete it"
+        )
+    return {"message": "Group deleted successfully", "group_id": group_id}

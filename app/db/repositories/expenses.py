@@ -304,24 +304,53 @@ class ExpenseRepository:
         
         users = await database.fetch_all(query=search_query, values=values)
         return [{"id": user["id"], "username": user["username"]} for user in users]
-        """Search users by username or get top 100 users if no query"""
-        if query:
-            search_query = """
-            SELECT id, username
-            FROM users 
-            WHERE username ILIKE :query
-            LIMIT 10
-            """
-            values = {"query": f"%{query}%"}
-        else:
-            search_query = """
-            SELECT id, username
-            FROM users
-            WHERE id != :current_user_id  # Don't include current user
-            ORDER BY username
-            LIMIT 100
-            """
-            values = {"current_user_id": current_user.id}
-        
-        users = await database.fetch_all(query=search_query, values=values)
-        return [{"id": user["id"], "username": user["username"]} for user in users]
+    async def delete_group(self, group_id: int, user_id: int) -> dict:
+        """Delete a group and its members. Only the creator can delete the group."""
+        try:
+            async with database.transaction():
+                # First check if group exists and user is the creator
+                check_query = """
+                SELECT id, name FROM groups 
+                WHERE id = :group_id AND created_by = :user_id
+                """
+                group = await database.fetch_one(
+                    query=check_query,
+                    values={"group_id": group_id, "user_id": user_id}
+                )
+                
+                if not group:
+                    return False
+                    
+                # Delete group members first
+                delete_members_query = """
+                DELETE FROM group_members 
+                WHERE group_id = :group_id
+                """
+                await database.execute(
+                    query=delete_members_query,
+                    values={"group_id": group_id}
+                )
+                
+                # Delete associated expenses
+                delete_expenses_query = """
+                DELETE FROM expenses 
+                WHERE group_id = :group_id
+                """
+                await database.execute(
+                    query=delete_expenses_query,
+                    values={"group_id": group_id}
+                )
+                
+                # Finally delete the group
+                delete_group_query = """
+                DELETE FROM groups 
+                WHERE id = :group_id AND created_by = :user_id
+                """
+                await database.execute(
+                    query=delete_group_query,
+                    values={"group_id": group_id, "user_id": user_id}
+                )
+                
+                return True
+        except Exception as e:
+            return False
