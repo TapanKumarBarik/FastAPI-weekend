@@ -243,3 +243,76 @@ class ExpenseRepository:
             """
         rows = await database.fetch_all(query=query, values={"group_id": group_id})
         return [row["username"] for row in rows]
+    
+    # Add to ExpenseRepository class in app/db/repositories/expenses.py
+    async def delete_expense(self, expense_id: int, user_id: int) -> bool:
+        # First check if expense exists and belongs to user
+        check_query = """
+        SELECT id FROM expenses 
+        WHERE id = :expense_id AND user_id = :user_id
+        """
+        expense = await database.fetch_one(
+            query=check_query,
+            values={"expense_id": expense_id, "user_id": user_id}
+        )
+        
+        if not expense:
+            return False
+    
+        # Delete the expense
+        delete_query = """
+        DELETE FROM expenses 
+        WHERE id = :expense_id AND user_id = :user_id
+        """
+        await database.execute(
+            query=delete_query,
+            values={"expense_id": expense_id, "user_id": user_id}
+        )
+        return True
+    async def search_users(self, query: str = None, current_user_id: int = None) -> List[dict]:
+        """Search users by username or get top 100 users if no query"""
+        if query:
+            search_query = """
+            SELECT id, username
+            FROM users 
+            WHERE username ILIKE :query
+            AND id != :current_user_id
+            LIMIT 10
+            """
+            values = {
+                "query": f"%{query}%",
+                "current_user_id": current_user_id
+            }
+        else:
+            search_query = """
+            SELECT id, username
+            FROM users
+            WHERE id != :current_user_id
+            ORDER BY username
+            LIMIT 100
+            """
+            values = {"current_user_id": current_user_id}
+        
+        users = await database.fetch_all(query=search_query, values=values)
+        return [{"id": user["id"], "username": user["username"]} for user in users]
+        """Search users by username or get top 100 users if no query"""
+        if query:
+            search_query = """
+            SELECT id, username
+            FROM users 
+            WHERE username ILIKE :query
+            LIMIT 10
+            """
+            values = {"query": f"%{query}%"}
+        else:
+            search_query = """
+            SELECT id, username
+            FROM users
+            WHERE id != :current_user_id  # Don't include current user
+            ORDER BY username
+            LIMIT 100
+            """
+            values = {"current_user_id": current_user.id}
+        
+        users = await database.fetch_all(query=search_query, values=values)
+        return [{"id": user["id"], "username": user["username"]} for user in users]

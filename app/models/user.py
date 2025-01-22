@@ -22,3 +22,10 @@ class User(Base):
         Index('idx_email_username', email, username),
     )
 
+
+from typing import List
+from pydantic import BaseModel
+
+class UserBasic(BaseModel):
+    id: int
+    username: str

@@ -96,3 +96,18 @@ async def get_group_members(
 ):
     """Get all user names of a specific group"""
     return await expense_repo.get_group_member_names(group_id)
+
+@router.delete("/expenses/{expense_id}", status_code=204)
+async def delete_expense(
+    expense_id: int,
+    current_user: User = Depends(get_current_active_user),
+    expense_repo: ExpenseRepository = Depends()
+):
+    """Delete an expense. Only the owner can delete their expenses."""
+    deleted = await expense_repo.delete_expense(expense_id, current_user.id)
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail="Expense not found or you don't have permission to delete it"
+        )
+    return 
