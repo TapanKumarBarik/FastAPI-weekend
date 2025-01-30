@@ -3,7 +3,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .db.database import database
-from .api.v1 import auth, users,expenses
+from .api.v1 import auth, users,expenses,todos
+
 
 import logging
 
@@ -34,6 +35,7 @@ logging.basicConfig(
 app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["auth"])
 app.include_router(users.router, prefix=settings.API_V1_STR, tags=["users"])
 app.include_router(expenses.router, prefix=settings.API_V1_STR, tags=["expenses"])
+app.include_router(todos.router, prefix=settings.API_V1_STR, tags=["todos"])
 
 @app.on_event("startup")
 async def startup():
