@@ -28,9 +28,12 @@ class UserInDBBase(UserBase):
     class Config:
         orm_mode = True
 
-# Properties to return to client
 class User(UserInDBBase):
-    pass
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 # Properties stored in DB
 class UserInDB(UserInDBBase):

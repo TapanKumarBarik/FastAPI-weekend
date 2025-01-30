@@ -16,10 +16,17 @@ class ExpenseBase(BaseModel):
 class ExpenseCreate(ExpenseBase):
     pass
 
+
+class GroupInfo(BaseModel):
+    id: int
+    name: str
+    
+    
 class Expense(ExpenseBase):
     id: int
     user_id: int
     created_at: datetime
+    group: Optional[GroupInfo] = None
 
     class Config:
         from_attributes = True

@@ -173,16 +173,43 @@ class ExpenseRepository:
         """
         values = {"group_id": group_id, "user_id": user_id}
         return await database.fetch_one(query=query, values=values)
-
     async def get_user_expenses(self, user_id: int) -> List[dict]:
         query = """
-        SELECT id, amount, description, user_id, group_id, created_at
-        FROM expenses
-        WHERE user_id = :user_id
-        ORDER BY created_at DESC
-        """
-        return await database.fetch_all(query=query, values={"user_id": user_id})
-
+            SELECT 
+                e.id,
+                e.amount,
+                e.description,
+                e.user_id,
+                e.group_id,
+                e.created_at,
+                g.id as group_id,
+                g.name as group_name
+            FROM expenses e
+            LEFT JOIN groups g ON e.group_id = g.id
+            WHERE e.user_id = :user_id
+            ORDER BY e.created_at DESC
+            """
+        rows = await database.fetch_all(query=query, values={"user_id": user_id})
+            
+            # Format the results to include nested group object
+        expenses = []
+        for row in rows:
+            expense = dict(row)
+            if expense['group_id']:
+                expense['group'] = {
+                        'id': expense['group_id'],
+                        'name': expense['group_name']
+                }
+            else:
+                expense['group'] = None
+                    
+            # Clean up extra fields
+            del expense['group_id']
+            del expense['group_name']
+            expenses.append(expense)
+                
+        return expenses
+    
     async def get_group_expenses(self, group_id: int) -> List[dict]:
         query = """
         SELECT id, amount, description, user_id, group_id, created_at
@@ -353,4 +380,4 @@ class ExpenseRepository:
                 
                 return True
         except Exception as e:
-            return False
+            return False 

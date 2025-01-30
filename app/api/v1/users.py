@@ -25,7 +25,8 @@ async def register(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already taken"
         )
-    return await user_repo.create(user)
+    user_data = await user_repo.create(user)
+    return User(**dict(user_data))
 
 @router.get("/me", response_model=User)
 async def read_users_me(current_user: User = Depends(get_current_user)):

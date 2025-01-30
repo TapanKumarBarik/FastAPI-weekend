@@ -20,26 +20,27 @@ class UserRepository:
         """
         return await database.fetch_one(query=query, values={"username": username})
 
+    async def update_active_status(self, user_id: int, is_active: bool) -> dict:
+        query = """
+        UPDATE users 
+        SET is_active = :is_active
+        WHERE id = :user_id
+        RETURNING id, email, username, is_active, age, gender, country, created_at
+        """
+        values = {"user_id": user_id, "is_active": is_active}
+        return await database.fetch_one(query=query, values=values)
+    
     async def create(self, user: UserCreate) -> dict:
         hashed_password = get_password_hash(user.password)
         query = """
-        INSERT INTO users (email, username, hashed_password)
-        VALUES (:email, :username, :hashed_password)
-        RETURNING id, email, username, created_at
+        INSERT INTO users (email, username, hashed_password, is_active)
+        VALUES (:email, :username, :hashed_password, :is_active)
+        RETURNING id, email, username, is_active, created_at
         """
         values = {
             "email": user.email,
             "username": user.username,
-            "hashed_password": hashed_password
+            "hashed_password": hashed_password,
+            "is_active": True
         }
         return await database.fetch_one(query=query, values=values)
-
-async def update_active_status(self, user_id: int, is_active: bool) -> dict:
-    query = """
-    UPDATE users 
-    SET is_active = :is_active
-    WHERE id = :user_id
-    RETURNING id, email, username, is_active, age, gender, country, created_at
-    """
-    values = {"user_id": user_id, "is_active": is_active}
-    return await database.fetch_one(query=query, values=values)
