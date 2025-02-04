@@ -16,7 +16,16 @@ class TodoRepository:
             "user_id": user_id
         }
         return await database.fetch_one(query=query, values=values)
-
+    async def get_completed_todos(self, user_id: int) -> List[dict]:
+        """Get all completed todos for a user"""
+        query = """
+        SELECT id, title, description, due_date, status, user_id, created_at
+        FROM todos
+        WHERE user_id = :user_id AND status = 'completed'
+        ORDER BY created_at DESC
+        """
+        return await database.fetch_all(query=query, values={"user_id": user_id})  
+    
     async def get_active_todos(self, user_id: int) -> List[dict]:
         query = """
         SELECT id, title, description, due_date, status, user_id, created_at

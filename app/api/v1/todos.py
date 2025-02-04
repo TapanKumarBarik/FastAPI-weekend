@@ -55,3 +55,11 @@ async def delete_todo(
     if not deleted:
         raise HTTPException(status_code=404, detail="Todo not found")
     return DeleteResponse(message="Item deleted successfully")
+
+@router.get("/todos/completed", response_model=List[Todo])
+async def get_completed_todos(
+    current_user: User = Depends(get_current_active_user),
+    todo_repo: TodoRepository = Depends()
+):
+    """Get all completed todos"""
+    return await todo_repo.get_completed_todos(current_user.id)
